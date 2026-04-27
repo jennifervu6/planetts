@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>`Speech Source Semantic Priming Study</title>
+
+<!-- CSS -->
 <style>
   body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:20px; }
   .card { background:white; border-radius:8px; padding:20px; max-width:900px; margin:0 auto; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
@@ -131,12 +133,14 @@
 </head>
 <body>
 
+  <!-- intro -->
 <div class="card" id="screen-splash">
   <h1>Welcome to the experiment</h1>
   <p>This study uses only audio prompts. Please wear headphones for the entire experiment and ensure there are no distractions.</p>
   <button class="btn btn-primary" id="splashBtn">Continue</button>
 </div>
 
+<!-- Audio Check -->
 <div class="card hidden" id="screen-audiocheck">
   <h1>Audio Check</h1>
   <button class="btn btn-primary" id="playAudioCheckBtn">Play Audio</button>
@@ -150,6 +154,7 @@
   <button class="btn btn-primary" id="audioCheckNextBtn" disabled>Continue</button>
 </div>
 
+<!-- Instructions -->
 <div class="card hidden" id="screen-instructions">
   <h1>Instructions</h1>
   <div style="max-width:760px; margin:0 auto; text-align:left; font-size:18px; line-height:1.6; color:#1f2937;">
@@ -160,6 +165,7 @@
   <button class="btn btn-primary" id="instructionsNextBtn">Continue</button>
 </div>
 
+<!-- Trials -->
 <div class="card hidden" id="screen-trials">
   <div class="progress"><div id="progressBar"></div></div>
   <h1 id="trialTitle">Trial</h1>
@@ -193,6 +199,7 @@
   </div>
 </div>
 
+<!-- End + Survey -->
 <div class="card hidden" id="screen-finish">
   <h1>All Done!</h1>
   <p>Thank you for participating in this study.</p>
@@ -225,6 +232,7 @@
   </div>
 </div>
 
+<!-- Javascript -->
 <script>
 /* ===========================
    CONFIG
@@ -253,7 +261,7 @@ const CONFIG = {
 
   // Use relative path for local testing with Live Server
   // For GitHub Pages, replace with your repository raw CSV URL
-  trialsUrl: "../data/trials.csv",
+  trialsUrl: "../data/priming_trials - development_trials.csv",
   attnBase: "./audio_check",           // inside /experiment/audio_check/
   attnFileNames: [
     "alice_b.wav", "bean_b.wav", "beaten_t_b.wav", "bun_b.wav",
@@ -262,7 +270,7 @@ const CONFIG = {
     "jaunt_t_b.wav", "keen_b.wav", "motley_t_b.wav", "ron_b.wav",
     "sane_b.wav", "seller_b.wav", "tin_b.wav", "tint_t_b.wav", "whinny_b.wav"
   ],
-  attentionEveryNTrials: 24,
+  attentionEveryNTrials: 0,
 
   // ── Trial timing (ms) ──────────────────────────────────────────────
   fixationDurationMs:   500,   // Step 1: fixation cross
