@@ -1,4 +1,967 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>`Speech Source Semantic Priming Study</title>
+<style>
+  body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:20px; }
+  .card { background:white; border-radius:8px; padding:20px; max-width:900px; margin:0 auto; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+  h1 { font-size:24px; margin-top:0; }
+  .btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; margin-right:8px; }
+  .btn-primary { background:#007acc; color:white; }
+  .btn-primary:disabled { background:#a0aec0; color:#e2e8f0; cursor:not-allowed; }
+  .btn-secondary { background:#ccc; color:black; }
+  .hidden { display:none; }
+  .progress { height:8px; background:#eee; border-radius:4px; margin:10px 0; overflow:hidden; }
+  .progress > div { height:100%; background:#007acc; width:0; transition:width .2s ease; }
+  textarea { width:100%; height:100px; margin-top:8px; padding:6px; border-radius:4px; border:1px solid #ccc; font-family:sans-serif; }
+  .question-block { margin:20px 0; padding:12px; background:#f9f9f9; border-radius:6px; border:1px solid #ddd; }
+  .question-block p { margin:0 0 8px 0; font-weight:bold; }
+  input[type="text"] { width:100%; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px; }
+  .radio-group { display:flex; gap:18px; flex-wrap:wrap; margin-top:8px; }
+  .radio-group label { display:flex; align-items:center; gap:6px; font-weight:normal; }
+  .scale-row { display:flex; align-items:center; gap:12px; margin-top:8px; }
+  .scale-row input[type="range"] { flex:1; }
+  .scale-value { min-width:44px; font-weight:700; text-align:right; }
+  .choices { display:flex; gap:14px; margin-top:14px; }
+  .choice-panel {
+    flex:1;
+    padding:18px 14px;
+    border-radius:10px;
+    border:2px solid #ddd;
+    background:#fafafa;
+    text-align:center;
+    user-select:none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .choice-panel.active { border-color:#007acc; background:#e8f4fd; }
+  .choice-key {
+    font-size:20px;
+    font-weight:700;
+    color:#475569;
+    letter-spacing:0.08em;
+  }
+  .choice-word {
+    margin-top:10px;
+    font-size:22px;
+    font-weight:700;
+    color:#111827;
+  }
+  .choice-subtext {
+    margin-top:4px;
+    font-size:13px;
+    color:#64748b;
+  }
+  .meta { margin-top:20px; color:#555; font-size:13px; text-align:center; }
+  #trialStatus { font-size:32px; font-weight:600; color:#333; margin-top:24px; }
+  #taskQuestion {
+    text-align:center;
+    font-size:18px;
+    font-weight:500;
+    margin:8px 0 14px;
+    color:#4b5563;
+  }
+  /* Main stimulus display area */
+  #stimulusDisplay {
+    margin:20px auto 10px;
+    max-width:700px;
+    min-height:120px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    border:2px solid #e2e8f0;
+    border-radius:12px;
+    background:#fbfdff;
+    padding:24px;
+    gap:8px;
+  }
+  #fixationCross {
+    font-size:52px;
+    font-weight:300;
+    color:#374151;
+    line-height:1;
+  }
+  #primeArea {
+    font-size:36px;
+    font-weight:600;
+    color:#6b7280;
+    min-height:50px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #primeLabel {
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:#9ca3af;
+    font-weight:600;
+  }
+  #targetArea {
+    font-size:44px;
+    font-weight:700;
+    color:#111827;
+    min-height:60px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #targetLabel {
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:#9ca3af;
+    font-weight:600;
+  }
+  #phaseIndicator {
+    font-size:12px;
+    color:#9ca3af;
+    min-height:20px;
+    font-style:italic;
+  }
+  .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; border:1px solid #ddd; background:#f7f7f7; padding:2px 6px; border-radius:6px; }
+  .image-pair { display:flex; gap:20px; margin:20px 0; justify-content:center; align-items:flex-start; }
+  .image-container { text-align:center; }
+  .image-container img { max-width:200px; max-height:200px; border-radius:8px; border:2px solid #ddd; }
+  .image-label { margin-top:8px; font-weight:bold; color:#333; }
+</style>
+</head>
 <body>
-    hi
+
+<div class="card" id="screen-splash">
+  <h1>Welcome to the experiment</h1>
+  <p>This study uses only audio prompts. Please wear headphones for the entire experiment and ensure there are no distractions.</p>
+  <button class="btn btn-primary" id="splashBtn">Continue</button>
+</div>
+
+<div class="card hidden" id="screen-audiocheck">
+  <h1>Audio Check</h1>
+  <button class="btn btn-primary" id="playAudioCheckBtn">Play Audio</button>
+  <audio id="audioCheckPlayer"></audio>
+
+  <div class="question-block">
+    <p>Play the audio and type the English word you heard:</p>
+    <input type="text" id="audioCheckResponse" style="width:300px; padding:6px;">
+  </div>
+
+  <button class="btn btn-primary" id="audioCheckNextBtn" disabled>Continue</button>
+</div>
+
+<div class="card hidden" id="screen-instructions">
+  <h1>Instructions</h1>
+  <div style="max-width:760px; margin:0 auto; text-align:left; font-size:18px; line-height:1.6; color:#1f2937;">
+    <p>In this task, you will be identifying whether or not the word you see on screen is a real word.</p>
+    <p>You will be presented with "Word" and "Nonword" options under the word to answer this question. Responses will be taken via keyboard, with F for a "Word" and J for a "Nonword." During each trial, you should focus on the center of the screen and read or listen to all words presented before making a decision about the final word.</p>
+  </div>
+  <br>
+  <button class="btn btn-primary" id="instructionsNextBtn">Continue</button>
+</div>
+
+<div class="card hidden" id="screen-trials">
+  <div class="progress"><div id="progressBar"></div></div>
+  <h1 id="trialTitle">Trial</h1>
+
+  <!-- Main stimulus display: shows fixation / prime / target in sequence -->
+  <div id="stimulusDisplay">
+    <div id="fixationCross" class="hidden">+</div>
+    <div id="primeLabel" class="hidden">PRIME</div>
+    <div id="primeArea" class="hidden">🔊</div>
+    <div id="phaseIndicator"></div>
+    <div id="targetLabel" class="hidden">TARGET — Is this a real word?</div>
+    <div id="targetArea" class="hidden"></div>
+  </div>
+
+  <!-- Hidden audio players -->
+  <audio id="primePlayer" preload="auto"></audio>
+  <audio id="targetPlayer" preload="auto"></audio>
+
+  <!-- Response buttons (YES / NO) — shown only at response phase -->
+  <div class="choices hidden" id="responseChoices" style="margin-top:14px;">
+    <div class="choice-panel" id="leftChoice">
+      <div class="choice-key">F</div>
+      <div class="choice-word">YES</div>
+      <div class="choice-subtext">Real word</div>
+    </div>
+    <div class="choice-panel" id="rightChoice">
+      <div class="choice-key">J</div>
+      <div class="choice-word">NO</div>
+      <div class="choice-subtext">Not a word</div>
+    </div>
+  </div>
+</div>
+
+<div class="card hidden" id="screen-finish">
+  <h1>All Done!</h1>
+  <p>Thank you for participating in this study.</p>
+  <div id="languagePrompt">
+    <p>Please answer a few quick language background questions before we finish:</p>
+
+    <div class="question-block">
+      <p><strong>Is English your native (first) language?</strong></p>
+      <div class="radio-group" id="nativeSpeakerGroup">
+        <label><input type="radio" name="nativeSpeaker" value="yes"> Yes — English is my L1</label>
+        <label><input type="radio" name="nativeSpeaker" value="no"> No — English is an additional language (L2)</label>
+      </div>
+    </div>
+
+    <div class="question-block" id="l1Block" style="display:none;">
+      <p><strong>What is your native (first) language?</strong></p>
+      <input type="text" id="l1Input" placeholder="e.g. Mandarin, Spanish, French…" style="width:320px; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px;">
+    </div>
+
+    <div class="question-block">
+      <p><strong>If you are not a native English speaker, at what age did you learn English?</strong></p>
+      <input type="text" id="otherLanguagesInput" placeholder="e.g. Spanish, Japanese, N/A" style="width:320px; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px;">
+    </div>
+
+    <button class="btn btn-primary" id="languageSubmitBtn">Submit &amp; Finish</button>
+  </div>
+
+  <div id="finishMessage" class="hidden">
+    <p>Your responses have been recorded. You may now close this window.</p>
+  </div>
+</div>
+
+<script>
+/* ===========================
+   CONFIG
+=========================== */
+
+/** Google Apps Script endpoint (same as your template) */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwILZ1cCZ0atPsez5mfmKRlRM7dOb03jYbKdmIgBnWLtZAQ8r6cD9r2VUPEx9swEPiJ/exec";
+const TARGET_SPREADSHEET_ID = "1bYZf29Zw_74UoQ1tZ4psvchdh-nOecD5_j8TSCGl1Mg";
+const TARGET_SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1bYZf29Zw_74UoQ1tZ4psvchdh-nOecD5_j8TSCGl1Mg/edit?gid=0#gid=0";
+
+/** Repo structure:
+ *  - This file is /priming/experiment/experiment.html
+ *  - Prime audio is /priming/data/audio/
+ *  - Trials CSV is /priming/data/trials.csv
+ *  - Attention check audio is /priming/experiment/audio_check/
+ */
+const CONFIG = {
+  audioBase: "../data/audio",          // base folder for all audio
+  audioSuffix: ".wav",
+
+  // Sub-folders under audioBase for each speech source:
+  //   human:  ../data/audio/human/<word>.wav
+  //   tts:    ../data/audio/tts/<word>.wav
+  humanFolder: "human",
+  ttsFolder:   "tts",
+
+  // Use relative path for local testing with Live Server
+  // For GitHub Pages, replace with your repository raw CSV URL
+  trialsUrl: "../data/trials.csv",
+  attnBase: "./audio_check",           // inside /experiment/audio_check/
+  attnFileNames: [
+    "alice_b.wav", "bean_b.wav", "beaten_t_b.wav", "bun_b.wav",
+    "curly_b.wav", "dane_b.wav", "den_b.wav", "dent_t_b.wav",
+    "faint_t_b.wav", "feign_b.wav", "gone_b.wav", "greatness_gs_b.wav",
+    "jaunt_t_b.wav", "keen_b.wav", "motley_t_b.wav", "ron_b.wav",
+    "sane_b.wav", "seller_b.wav", "tin_b.wav", "tint_t_b.wav", "whinny_b.wav"
+  ],
+  attentionEveryNTrials: 24,
+
+  // ── Trial timing (ms) ──────────────────────────────────────────────
+  fixationDurationMs:   500,   // Step 1: fixation cross
+  // prime duration is driven by audio length (no fixed duration)
+  soa_pauseMs:          200,   // Step 3: silent pause after prime, before target
+  // target duration is driven by audio length (no fixed duration)
+  itiMinMs:             500,   // Step 6: inter-trial interval (min)
+  itiMaxMs:            1000,   // Step 6: inter-trial interval (max)
+
+  // Minimum prime display in ms when audio ends faster than expected
+  primeMinDisplayMs: 695,
+};
+
+/** Trials: Loaded from CSV
+ *  Expected columns from /data/trials.csv:
+ *  - Trial
+ *  - Prime
+ *  - Target
+ *  - Prime Modality (word|audio)
+ *  - Condition
+ *  - Prime Language
+ *  - Target Language
+ *  - Trial Type (related|unrelated)
+ *  Optional columns are carried through to output rows.
+ */
+let TRIALS = [];
+
+/* ===========================
+   STATE
+=========================== */
+const State = {
+  participantId: null,
+  sessionId: `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+  // speech_source is assigned per-trial from the CSV column "speech_source" (human|tts)
+  // or randomly assigned per participant if the column is absent
+  participantSpeechSource: null,   // "human" | "tts" — set at splash
+  trialIndex: 0,
+  targetOnsetTs: null,   // performance.now() at moment target audio/display starts → RT anchor
+  awaitingChoice: false,
+  attnQueue: [],
+  attnAnswers: [],
+  languageBackground: {
+    nativeSpeaker: "",  // "yes" = native English, "no" = L2 learner
+    l1Language: "",
+  },
+  rowsLocal: [],
+};
+
+/* ===========================
+   HELPERS
+=========================== */
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function nowMs(){ return performance.now(); }
+function randomBoolean(){ return Math.random() > 0.5; }
+function generateParticipantId(){ return String(Math.floor(100000 + Math.random() * 900000)); }
+
+function normalizeLanguage(value){
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if(normalized === "fr" || normalized === "french") return "french";
+  if(normalized === "en" || normalized === "english") return "english";
+  return normalized;
+}
+
+function normalizeResponseLabel(value){
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if(normalized === "word") return "word";
+  if(normalized === "nonword") return "nonword";
+  if(normalized === "yes") return "yes";
+  if(normalized === "no") return "no";
+  return normalized;
+}
+
+function randomChoice(values){
+  return values[Math.floor(Math.random() * values.length)];
+}
+
+function sendToGoogleSheet(obj){
+  const payload = {
+    ...obj,
+    spreadsheet_id: TARGET_SPREADSHEET_ID,
+    spreadsheet_url: TARGET_SPREADSHEET_URL,
+    source_experiment: "experiment1",
+  };
+
+  const params = new URLSearchParams();
+  for(const [k, v] of Object.entries(payload)){
+    params.append(k, String(v ?? ""));
+  }
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+    body: params.toString(),
+    keepalive: true,
+  }).catch(err => {
+    console.error("Sheet POST error:", err);
+    if(navigator.sendBeacon){
+      const blob = new Blob([params.toString()], { type: "application/x-www-form-urlencoded;charset=UTF-8" });
+      navigator.sendBeacon(SCRIPT_URL, blob);
+    }
+  });
+}
+
+function show(id){ document.getElementById(id).classList.remove("hidden"); }
+function hide(id){ document.getElementById(id).classList.add("hidden"); }
+
+function currentTrial(){ return TRIALS[State.trialIndex]; }
+
+/** Resolve the URL for the prime audio file.
+ *  speech_source on the trial (or participantSpeechSource) selects the sub-folder.
+ *  Expected folder layout:
+ *    ../data/audio/human/<word>.wav   (human recordings)
+ *    ../data/audio/tts/<word>.wav     (TTS recordings)
+ */
+function resolvePrimeAudioUrl(trial){
+  const source = trial.speech_source || State.participantSpeechSource || "human";
+  const folder = (source === "tts") ? CONFIG.ttsFolder : CONFIG.humanFolder;
+  const filename = trial.prime_audio_file || `${trial.prime_text}${CONFIG.audioSuffix}`;
+  return `${CONFIG.audioBase}/${folder}/${encodeURIComponent(filename)}`;
+}
+
+/** Resolve the URL for the target audio file. */
+function resolveTargetAudioUrl(trial){
+  const source = trial.speech_source || State.participantSpeechSource || "human";
+  const folder = (source === "tts") ? CONFIG.ttsFolder : CONFIG.humanFolder;
+  const filename = trial.target_audio_file || `${trial.target_word}${CONFIG.audioSuffix}`;
+  return `${CONFIG.audioBase}/${folder}/${encodeURIComponent(filename)}`;
+}
+
+function sleep(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function waitForAudioEnd(audioEl){
+  return new Promise((resolve, reject) => {
+    const onEnded = () => { cleanup(); resolve(); };
+    const onError = () => { cleanup(); reject(new Error("Audio playback failed")); };
+    const cleanup = () => {
+      audioEl.removeEventListener("ended", onEnded);
+      audioEl.removeEventListener("error", onError);
+    };
+    audioEl.addEventListener("ended", onEnded);
+    audioEl.addEventListener("error", onError);
+  });
+}
+
+/* ===========================
+   CSV PARSING & TRIAL SETUP
+=========================== */
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  if(lines.length < 2) return [];
+  
+  // Parse header row
+  const headerLine = lines[0];
+  const headers = headerLine.split(',').map(h => h.trim());
+  
+  function findColumn(candidates){
+    for(const name of candidates){
+      const idx = headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
+      if(idx !== -1) return idx;
+    }
+    return -1;
+  }
+
+  const trialIdIdx           = findColumn(["Trial", "trial", "trial_id"]);
+  const primeIdx             = findColumn(["Prime", "prime", "PrimeWord", "prime_word"]);
+  const targetIdx            = findColumn(["Target", "target", "TargetWord", "target_word"]);
+  const primeModalityIdx     = findColumn(["Prime Modality", "PrimeModality", "prime_modality", "PrimeType"]);
+  const trialTypeIdx         = findColumn(["Trial Type", "TrialType", "trial_type", "condition"]);
+  const targetLanguageIdx    = findColumn(["Target Language", "TargetLanguage", "target_language"]);
+  const speechSourceIdx      = findColumn(["speech_source", "SpeechSource", "Speech Source"]);
+  const primeAudioFileIdx    = findColumn(["prime_audio_file", "PrimeAudioFile"]);
+  const targetAudioFileIdx   = findColumn(["target_audio_file", "TargetAudioFile"]);
+  const englishTargetIdx     = findColumn(["english_target"]);
+  const nonwordTargetIdx     = findColumn(["nonword_target"]);
+  const relatedPrimeEnglishIdx   = findColumn(["related_prime_english"]);
+  const unrelatedPrimeEnglishIdx = findColumn(["unrelated_prime_english"]);
+  const relatedPrimeFrenchIdx    = findColumn(["related_prime_french"]);
+  const unrelatedPrimeFrenchIdx  = findColumn(["unrelated_prime_french"]);
+
+  const hasLegacyColumns = primeIdx !== -1 && targetIdx !== -1 && primeModalityIdx !== -1 && trialTypeIdx !== -1 && targetLanguageIdx !== -1;
+  const hasLexicalDecisionColumns = englishTargetIdx !== -1 && nonwordTargetIdx !== -1 && relatedPrimeEnglishIdx !== -1 && unrelatedPrimeEnglishIdx !== -1 && relatedPrimeFrenchIdx !== -1 && unrelatedPrimeFrenchIdx !== -1;
+
+  if(!hasLegacyColumns && !hasLexicalDecisionColumns){
+    console.error("CSV missing required columns for either the legacy or lexical-decision formats.");
+    return [];
+  }
+  
+  // Parse data rows
+  const trials = [];
+  for(let i = 1; i < lines.length; i++){
+    const line = lines[i].trim();
+    if(!line) continue; // skip empty lines
+    
+    const cells = line.split(',').map(c => c.trim());
+    if(hasLegacyColumns){
+      const primeText       = cells[primeIdx] || "";
+      const targetWord      = cells[targetIdx] || "";
+      const primeType       = ((cells[primeModalityIdx] || "audio").toLowerCase() === "audio") ? "audio" : "word";
+      const trialType       = (cells[trialTypeIdx] || "").toLowerCase();
+      const targetLanguage  = normalizeLanguage(cells[targetLanguageIdx] || "");
+      const correctResponse = normalizeResponseLabel(targetLanguage);
+      // speech_source: read from CSV if present, otherwise will use participantSpeechSource at runtime
+      const speechSource    = speechSourceIdx !== -1 ? (cells[speechSourceIdx] || "").toLowerCase() : "";
+      const primeAudioFile  = primeAudioFileIdx !== -1 ? (cells[primeAudioFileIdx] || "") : `${primeText}${CONFIG.audioSuffix}`;
+      const targetAudioFile = targetAudioFileIdx !== -1 ? (cells[targetAudioFileIdx] || "") : `${targetWord}${CONFIG.audioSuffix}`;
+
+      if(!primeText || !targetWord) continue;
+      
+      // Capture all other columns as custom data
+      const customData = {};
+      for(let j = 0; j < headers.length; j++){
+        const skip = [trialIdIdx, primeIdx, targetIdx, primeModalityIdx, trialTypeIdx, targetLanguageIdx, speechSourceIdx, primeAudioFileIdx, targetAudioFileIdx];
+        if(!skip.includes(j)) customData[headers[j]] = cells[j] || '';
+      }
+      
+      trials.push({
+        trial_id:         trialIdIdx !== -1 ? (cells[trialIdIdx] || i) : i,
+        prime_type:       primeType,
+        prime_text:       primeText,
+        prime_audio_file: primeAudioFile,
+        target_word:      targetWord,
+        target_audio_file:targetAudioFile,
+        trial_type:       trialType,   // "critical" | "baseline" | "filler"
+        correct_response: correctResponse,  // "yes" (real word) | "no" (nonword)
+        target_language:  targetLanguage,
+        speech_source:    speechSource,     // "human" | "tts" | "" (use participant-level)
+        ...customData,
+      });
+      continue;
+    }
+
+    const customData = {};
+    for(let j = 0; j < headers.length; j++){
+      if(j !== trialIdIdx && j !== englishTargetIdx && j !== nonwordTargetIdx && j !== relatedPrimeEnglishIdx && j !== unrelatedPrimeEnglishIdx && j !== relatedPrimeFrenchIdx && j !== unrelatedPrimeFrenchIdx){
+        customData[headers[j]] = cells[j] || '';
+      }
+    }
+
+    const trialBaseId = trialIdIdx !== -1 ? (cells[trialIdIdx] || i) : i;
+    const targetSpecs = [
+      { target_word: cells[englishTargetIdx] || "", correct_response: "word", target_label: "english_target" },
+      { target_word: cells[nonwordTargetIdx] || "", correct_response: "nonword", target_label: "nonword_target" },
+    ];
+    const primeSpecs = [
+      { prime_key: "related_prime_english", prime_text: cells[relatedPrimeEnglishIdx] || "" },
+      { prime_key: "unrelated_prime_english", prime_text: cells[unrelatedPrimeEnglishIdx] || "" },
+      { prime_key: "related_prime_french", prime_text: cells[relatedPrimeFrenchIdx] || "" },
+      { prime_key: "unrelated_prime_french", prime_text: cells[unrelatedPrimeFrenchIdx] || "" },
+    ];
+
+    for(const targetSpec of targetSpecs){
+      if(!targetSpec.target_word) continue;
+
+      for(const primeSpec of primeSpecs){
+        if(!primeSpec.prime_text) continue;
+
+        const primeType = randomChoice(["word", "audio"]);
+        trials.push({
+          trial_id: `${trialBaseId}_${targetSpec.target_label}_${primeSpec.prime_key}_${primeType}`,
+          source_row_id: trialBaseId,
+          prime_type: primeType,
+          prime_text: primeSpec.prime_text,
+          prime_audio_file: `${primeSpec.prime_text}.wav`,
+          target_word: targetSpec.target_word,
+          target_label: targetSpec.target_label,
+          prime_key: primeSpec.prime_key,
+          trial_type: targetSpec.correct_response,
+          correct_response: targetSpec.correct_response,
+          target_language: targetSpec.correct_response,
+          ...customData,
+        });
+      }
+    }
+  }
+  
+  return trials;
+}
+
+async function loadTrialsFromCSV(){
+  try {
+    const response = await fetch(CONFIG.trialsUrl);
+    if(!response.ok) throw new Error(`Failed to load CSV: ${response.statusText}`);
+    
+    const csvText = await response.text();
+    TRIALS = parseCSV(csvText);
+    
+    if(TRIALS.length === 0){
+      alert("No valid trials found in CSV file. Check the file format and column names.");
+      return false;
+    }
+    
+    console.log(`Loaded ${TRIALS.length} trials from CSV`);
+    return true;
+  } catch (err) {
+    console.error('CSV load error:', err);
+    alert("Failed to load trials from CSV file. Check the browser console for details.");
+    return false;
+  }
+}
+
+/* ===========================
+  SPLASH
+=========================== */
+const splashBtn = document.getElementById('splashBtn');
+
+splashBtn.onclick = () => {
+  State.participantId = generateParticipantId();
+
+  // Randomly assign speech source for this participant (between-subjects manipulation)
+  // If the CSV provides per-trial speech_source, that will override this at trial time.
+  State.participantSpeechSource = randomBoolean() ? "human" : "tts";
+
+  // Load trials from CSV before proceeding
+  splashBtn.disabled = true;
+  splashBtn.textContent = "Loading trials...";
+
+  loadTrialsFromCSV().then(success => {
+    if(success){
+      hide("screen-splash");
+      prepareAttentionQueue();
+      showAudioAttentionCheck(() => showInstructions());
+    }
+    splashBtn.disabled = false;
+    splashBtn.textContent = "Continue";
+  });
+};
+
+/* ===========================
+   ATTENTION CHECKS
+=========================== */
+function prepareAttentionQueue(){
+  const urls = CONFIG.attnFileNames.map(filename => `${CONFIG.attnBase}/${filename}`);
+  State.attnQueue = shuffle(urls);
+}
+function nextAttentionAudio(){
+  if(State.attnQueue.length===0) prepareAttentionQueue();
+  return State.attnQueue.shift();
+}
+
+function showAudioAttentionCheck(onContinue){
+  const card = document.getElementById('screen-audiocheck');
+  const playBtn = document.getElementById('playAudioCheckBtn');
+  const audio   = document.getElementById('audioCheckPlayer');
+  const input   = document.getElementById('audioCheckResponse');
+  const nextBtn = document.getElementById('audioCheckNextBtn');
+
+  input.value = "";
+  nextBtn.disabled = true;
+
+  playBtn.disabled = false;
+  playBtn.textContent = "Play Audio";
+
+  audio.src = nextAttentionAudio();
+  audio.currentTime = 0;
+
+  playBtn.onclick = async () => {
+    try {
+      playBtn.disabled = true;
+      playBtn.textContent = "Playing...";
+      await audio.play();
+    } catch {
+      alert("Please check your browser audio permissions.");
+      playBtn.disabled = false;
+      playBtn.textContent = "Play Audio";
+    }
+  };
+
+  audio.onended = () => {
+    playBtn.textContent = "Audio finished";
+    playBtn.disabled = true;
+  };
+
+  input.oninput = () => { nextBtn.disabled = !input.value.trim(); };
+
+  nextBtn.onclick = () => {
+    const ans = input.value.trim();
+    if(!ans){ alert("Please type your answer before continuing."); return; }
+    State.attnAnswers.push(ans);
+
+    // optionally send attention check row immediately
+    sendToGoogleSheet({
+      participant_id: State.participantId,
+      block: "AttentionCheck",
+      attention_index: State.attnAnswers.length,
+      attention_audio: audio.src,
+      attention_response: ans,
+      headphone_type: State.headphoneType,
+      timestamp_iso: new Date().toISOString(),
+    });
+
+    card.classList.add('hidden');
+    onContinue && onContinue();
+  };
+
+  card.classList.remove('hidden');
+}
+
+/* ===========================
+   INSTRUCTIONS SCREEN
+=========================== */
+function showInstructions(){
+  const instructionsNextBtn = document.getElementById('instructionsNextBtn');
+  
+  instructionsNextBtn.onclick = () => {
+    hide("screen-instructions");
+    startTrials();
+  };
+  
+  show("screen-instructions");
+}
+
+/* ===========================
+  TRIALS: SEMANTIC PRIMING
+  Step 1: Fixation 500ms
+  Step 2: Prime audio
+  Step 3: SOA pause ~200ms
+  Step 4: Target audio
+  Step 5: Response (F=YES / J=NO)
+  Step 6: ITI 500–1000ms
+=========================== */
+const screenTrials    = document.getElementById("screen-trials");
+const progressBar     = document.getElementById("progressBar");
+const trialTitle      = document.getElementById("trialTitle");
+const primePlayer     = document.getElementById("primePlayer");
+const targetPlayer    = document.getElementById("targetPlayer");
+const responseChoices = document.getElementById("responseChoices");
+
+// Stimulus sub-elements
+const fixationCross = document.getElementById("fixationCross");
+const primeLabel    = document.getElementById("primeLabel");
+const primeArea     = document.getElementById("primeArea");
+const phaseIndicator= document.getElementById("phaseIndicator");
+const targetLabel   = document.getElementById("targetLabel");
+const targetArea    = document.getElementById("targetArea");
+
+let trialRenderToken = 0;
+
+/* ── Helpers ── */
+function setChoiceVisible(visible){
+  if(visible) responseChoices.classList.remove("hidden");
+  else        responseChoices.classList.add("hidden");
+}
+
+function clearStimulus(){
+  fixationCross.classList.add("hidden");
+  primeLabel.classList.add("hidden");
+  primeArea.classList.add("hidden");
+  targetLabel.classList.add("hidden");
+  targetArea.classList.add("hidden");
+  phaseIndicator.textContent = "";
+}
+
+function updateProgress(){
+  const total = TRIALS.length;
+  const done  = State.trialIndex;
+  progressBar.style.width = `${Math.round((done / total) * 100)}%`;
+  trialTitle.textContent  = `Trial ${Math.min(done + 1, total)} of ${total}`;
+}
+
+function randomITI(){
+  return CONFIG.itiMinMs + Math.floor(Math.random() * (CONFIG.itiMaxMs - CONFIG.itiMinMs + 1));
+}
+
+function startTrials(){
+  shuffle(TRIALS);
+  show("screen-trials");
+  State.trialIndex = 0;
+  loadTrial();
+}
+
+function loadTrial(){
+  const t = currentTrial();
+  if(!t){ finishStudy(); return; }
+
+  const thisToken = ++trialRenderToken;
+  updateProgress();
+  State.targetOnsetTs  = null;
+  State.awaitingChoice = false;
+
+  setChoiceVisible(false);
+  clearStimulus();
+
+  // Preload audio for this trial
+  primePlayer.src  = resolvePrimeAudioUrl(t);
+  primePlayer.load();
+  targetPlayer.src = resolveTargetAudioUrl(t);
+  targetPlayer.load();
+
+  runTrialSequence(t, thisToken);
+}
+
+async function runTrialSequence(trial, token){
+  /* ── STEP 1: Fixation cross (500 ms) ── */
+  clearStimulus();
+  fixationCross.classList.remove("hidden");
+  phaseIndicator.textContent = "";
+  await sleep(CONFIG.fixationDurationMs);
+  if(token !== trialRenderToken) return;
+
+  /* ── STEP 2: Prime audio ── */
+  clearStimulus();
+  primeArea.classList.remove("hidden");
+  primeLabel.classList.remove("hidden");
+  const speechSrc = (trial.speech_source || State.participantSpeechSource || "human");
+  primeArea.textContent = "🔊";
+  phaseIndicator.textContent = `Prime · ${speechSrc === "tts" ? "Text-to-Speech" : "Human speech"}`;
+
+  try {
+    primePlayer.currentTime = 0;
+    await primePlayer.play();
+    await waitForAudioEnd(primePlayer);
+  } catch(e){
+    console.error("Prime audio error:", e);
+    // Gracefully continue even if audio fails
+  }
+  if(token !== trialRenderToken) return;
+
+  /* ── STEP 3: SOA pause (~200 ms) ── */
+  clearStimulus();
+  phaseIndicator.textContent = "";
+  await sleep(CONFIG.soa_pauseMs);
+  if(token !== trialRenderToken) return;
+
+  /* ── STEP 4: Target audio ── */
+  clearStimulus();
+  targetArea.classList.remove("hidden");
+  targetLabel.classList.remove("hidden");
+  targetArea.textContent = "🔊";
+  phaseIndicator.textContent = "Target — listen…";
+
+  // Record RT onset the moment target audio starts
+  State.targetOnsetTs = nowMs();
+  try {
+    targetPlayer.currentTime = 0;
+    await targetPlayer.play();
+    await waitForAudioEnd(targetPlayer);
+  } catch(e){
+    console.error("Target audio error:", e);
+  }
+  if(token !== trialRenderToken) return;
+
+  /* ── STEP 5: Response phase ── */
+  // Show target word as text for reference alongside YES/NO buttons
+  targetArea.textContent   = trial.target_word;
+  phaseIndicator.textContent = "Is this a real word?";
+  targetLabel.classList.remove("hidden");
+
+  State.awaitingChoice = true;
+  setChoiceVisible(true);
+  // RT is measured from target audio onset (already captured above)
+}
+
+function recordChoice(choiceSide){
+  if(!State.awaitingChoice) return;
+
+  const t = currentTrial();
+  const clickTs = nowMs();
+  const rt_ms   = Math.round(clickTs - (State.targetOnsetTs ?? clickTs));
+
+  // Left = F = YES (real word) ; Right = J = NO (nonword)
+  const response   = (choiceSide === "left") ? "yes" : "no";
+  const is_correct = response === (t.correct_response || "");
+
+  const speechSrc  = t.speech_source || State.participantSpeechSource || "human";
+
+  const row = {
+    participant_id:     State.participantId,
+    session_id:         State.sessionId,
+    block:              "Trials",
+    trial_index:        State.trialIndex + 1,
+    trial_id:           t.trial_id ?? "",
+    trial_type:         t.trial_type ?? "",      // critical | baseline | filler
+    speech_source:      speechSrc,               // human | tts  ← KEY IV
+    prime_text:         t.prime_text ?? "",
+    prime_audio_url:    primePlayer.src,
+    target_word:        t.target_word ?? "",
+    target_audio_url:   targetPlayer.src,
+    correct_response:   t.correct_response ?? "", // yes | no
+    participant_response: response,               // yes | no
+    is_correct:         is_correct ? "yes" : "no",
+    reaction_time_ms:   rt_ms,                   // RT from target audio onset
+    timestamp_iso:      new Date().toISOString(),
+  };
+
+  // Pass through any extra CSV columns
+  for(const [key, value] of Object.entries(t)){
+    if(!row.hasOwnProperty(key)) row[key] = value ?? "";
+  }
+
+  State.rowsLocal.push(row);
+  sendToGoogleSheet(row);
+
+  // Lock input
+  State.awaitingChoice = false;
+  setChoiceVisible(false);
+  clearStimulus();
+
+  // Highlight pressed panel briefly
+  const panel = (choiceSide === "left")
+    ? document.getElementById("leftChoice")
+    : document.getElementById("rightChoice");
+  panel.classList.add("active");
+  setTimeout(() => panel.classList.remove("active"), 300);
+
+  // Attention check every N trials (optional)
+  const nextIndex   = State.trialIndex + 1;
+  const needsCheck  = (CONFIG.attentionEveryNTrials > 0)
+    && (nextIndex % CONFIG.attentionEveryNTrials === 0)
+    && (nextIndex < TRIALS.length);
+
+  State.trialIndex += 1;
+
+  const iti = randomITI();
+  if(needsCheck){
+    setTimeout(() => {
+      hide("screen-trials");
+      showAudioAttentionCheck(() => {
+        show("screen-trials");
+        loadTrial();
+      });
+    }, iti);
+  } else {
+    setTimeout(loadTrial, iti);
+  }
+}
+
+// Keyboard shortcuts: F = YES (left), J = NO (right)
+document.addEventListener("keydown", (e) => {
+  if(screenTrials.classList.contains("hidden")) return;
+  if(!State.awaitingChoice) return;
+  const k = e.key.toLowerCase();
+  if(k === "f") recordChoice("left");
+  if(k === "j") recordChoice("right");
+});
+
+/* ===========================
+   FINAL SUBMISSION
+=========================== */
+function finishStudy(){
+  hide("screen-trials");
+  show("screen-finish");
+
+  // Show/hide L1 text box based on native speaker answer
+  document.querySelectorAll('input[name="nativeSpeaker"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+      const isNative = radio.value === "yes";
+      document.getElementById("l1Block").style.display = isNative ? "none" : "block";
+    });
+  });
+
+  const languageSubmitBtn = document.getElementById("languageSubmitBtn");
+
+  languageSubmitBtn.onclick = () => {
+    const nativeChoice = document.querySelector('input[name="nativeSpeaker"]:checked');
+    const l1Value      = document.getElementById("l1Input").value.trim();
+    const otherLangs   = document.getElementById("otherLanguagesInput").value.trim();
+
+    if(!nativeChoice){
+      alert("Please indicate whether English is your native language.");
+      return;
+    }
+    if(nativeChoice.value === "no" && !l1Value){
+      alert("Please enter your native (first) language.");
+      return;
+    }
+    if(!otherLangs){
+      alert("Please fill in the other languages field (or type N/A).");
+      return;
+    }
+
+    State.languageBackground = {
+      nativeSpeaker:     nativeChoice.value,
+      l1Language:        nativeChoice.value === "no" ? l1Value : "English",
+      otherLanguages:    otherLangs,
+    };
+
+    const out = {
+      participant_id:         State.participantId,
+      session_id:             State.sessionId,
+      block:                  "Final",
+      speech_source_assigned: State.participantSpeechSource,
+      native_english_speaker: nativeChoice.value,
+      l1_language:            State.languageBackground.l1Language,
+      other_languages:        otherLangs,
+      timestamp_iso:          new Date().toISOString(),
+    };
+    for(let i = 0; i < State.attnAnswers.length; i++){
+      out[`attention_check_${i + 1}`] = State.attnAnswers[i] || "";
+    }
+    sendToGoogleSheet(out);
+
+    document.getElementById("languagePrompt").classList.add("hidden");
+    document.getElementById("finishMessage").classList.remove("hidden");
+  };
+}
+</script>
+
 </body>
+</html>
