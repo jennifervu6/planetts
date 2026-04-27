@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>`Speech Source Semantic Priming Study</title>
+<title>Speech Source Semantic Priming Study</title>
 <style>
   body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:20px; }
   .card { background:white; border-radius:8px; padding:20px; max-width:900px; margin:0 auto; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
@@ -133,7 +133,7 @@
 
 <div class="card" id="screen-splash">
   <h1>Welcome to the experiment</h1>
-  <p>This study uses only audio prompts. Please wear headphones for the entire experiment.</p>
+  <p>This study uses only audio prompts. Please wear headphones for the entire experiment and ensure there are no distractions.</p>
   <button class="btn btn-primary" id="splashBtn">Continue</button>
 </div>
 
@@ -143,7 +143,7 @@
   <audio id="audioCheckPlayer"></audio>
 
   <div class="question-block">
-    <p>Play the audio and type the English word you heard:</p>
+    <p>Play the audio and type the word you heard:</p>
     <input type="text" id="audioCheckResponse" style="width:300px; padding:6px;">
   </div>
 
@@ -153,8 +153,8 @@
 <div class="card hidden" id="screen-instructions">
   <h1>Instructions</h1>
   <div style="max-width:760px; margin:0 auto; text-align:left; font-size:18px; line-height:1.6; color:#1f2937;">
-    <p>In this task, you will hear two words played one after the other. After the second word, you will decide whether it is a real English word or not.</p>
-    <p>Press <strong>F</strong> for <strong>YES</strong> (real word) or <strong>J</strong> for <strong>NO</strong> (not a word). Respond as quickly and accurately as you can. Keep your eyes on the centre of the screen throughout each trial.</p>
+    <p>In this task, you will hear two words played one after the other. The words may be generated from the computer or spoken by a human. After the second word, you will decide whether it is a real English word or not.</p>
+    <p>Press <strong>F</strong> for <strong>YES</strong> (real word) or <strong>J</strong> for <strong>NO</strong> (not a word). Respond as quickly and accurately as you can. Keep your eyes on the center of the screen throughout each trial.</p>
   </div>
   <br>
   <button class="btn btn-primary" id="instructionsNextBtn">Continue</button>
@@ -230,9 +230,9 @@
 =========================== */
 
 /** Google Apps Script endpoint (same as your template) */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwILZ1cCZ0atPsez5mfmKRlRM7dOb03jYbKdmIgBnWLtZAQ8r6cD9r2VUPEx9swEPiJ/exec";
-const TARGET_SPREADSHEET_ID = "1bYZf29Zw_74UoQ1tZ4psvchdh-nOecD5_j8TSCGl1Mg";
-const TARGET_SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1bYZf29Zw_74UoQ1tZ4psvchdh-nOecD5_j8TSCGl1Mg/edit?gid=0#gid=0";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwke8pP89NpB5Mh0IzSb-08vdDPDiyf_1dWnkWx3ksQO5a3yWtyTB1g6YS_D-XWc7vn/exec";
+const TARGET_SPREADSHEET_ID = "1KU7HvdX16YQmNuBxzG2o2Weh5ksGgMDITZurQjwMmdI";
+const TARGET_SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1KU7HvdX16YQmNuBxzG2o2Weh5ksGgMDITZurQjwMmdI/edit?usp=sharing";
 
 /** Repo structure:
  *  - This file is /priming/experiment/experiment.html
@@ -252,16 +252,16 @@ const CONFIG = {
 
   // Use relative path for local testing with Live Server
   // For GitHub Pages, replace with your repository raw CSV URL
-  trialsUrl: "../data/trials.csv",
+  trialsUrl: "../data/development_trials.csv",
   attnBase: "./audio_check",           // inside /experiment/audio_check/
   attnFileNames: [
-    "curly.wav"],
+    'curly.wav'],
   attentionEveryNTrials: 0,
 
   // ── Trial timing (ms) ──────────────────────────────────────────────
   fixationDurationMs:   500,   // Step 1: fixation cross
   // prime duration is driven by audio length (no fixed duration)
-  soa_pauseMs:          200,   // Step 3: silent pause after prime, before target
+  soa_pauseMs:          500,   // Step 3: silent pause after prime, before target
   // target duration is driven by audio length (no fixed duration)
   itiMinMs:             500,   // Step 6: inter-trial interval (min)
   itiMaxMs:            1000,   // Step 6: inter-trial interval (max)
@@ -288,19 +288,19 @@ let TRIALS = [];
 const State = {
   participantId: null,
   sessionId: `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-  // speech_source is assigned per-trial from the CSV column "speech_source" (human|tts)
-  // or randomly assigned per participant if the column is absent
-  participantSpeechSource: null,   // "human" | "tts" — set at splash
+  participantSpeechSource: null,
   trialIndex: 0,
-  targetOnsetTs: null,   // performance.now() at moment target audio/display starts → RT anchor
+  targetOnsetTs: null,
   awaitingChoice: false,
   attnQueue: [],
   attnAnswers: [],
-  languageBackground: {
-    nativeSpeaker: "",  // "yes" = native English, "no" = L2 learner
-    l1Language: "",
+  // Questionnaire answers — filled in at the end, then attached to every trial row
+  questionnaire: {
+    native_english_speaker: "",
+    l1_language: "",
+    age_of_english_acquisition: "",
   },
-  rowsLocal: [],
+  rowsLocal: [],   // holds all trial rows until questionnaire is complete
 };
 
 /* ===========================
@@ -539,11 +539,9 @@ const splashBtn = document.getElementById('splashBtn');
 splashBtn.onclick = () => {
   State.participantId = generateParticipantId();
 
-  // Randomly assign speech source for this participant (between-subjects manipulation)
-  // If the CSV provides per-trial speech_source, that will override this at trial time.
-  State.participantSpeechSource = randomBoolean() ? "human" : "tts";
+  // Speech source is now within-subjects — both human and TTS versions
+  // of every trial are presented, in randomized order (see startTrials).
 
-  // Load trials from CSV before proceeding
   splashBtn.disabled = true;
   splashBtn.textContent = "Loading trials...";
 
@@ -694,7 +692,17 @@ function randomITI(){
 }
 
 function startTrials(){
-  shuffle(TRIALS);
+  // Within-subjects speech source manipulation:
+  // Duplicate every trial — one human version, one TTS version —
+  // then shuffle the combined list to randomize order.
+  const bothSources = [];
+  for(const trial of TRIALS){
+    bothSources.push({ ...trial, speech_source: "human" });
+    bothSources.push({ ...trial, speech_source: "tts"   });
+  }
+  shuffle(bothSources);
+  TRIALS = bothSources;
+
   show("screen-trials");
   State.trialIndex = 0;
   loadTrial();
@@ -796,31 +804,29 @@ function recordChoice(choiceSide){
   const speechSrc  = t.speech_source || State.participantSpeechSource || "human";
 
   const row = {
-    participant_id:     State.participantId,
-    session_id:         State.sessionId,
-    block:              "Trials",
-    trial_index:        State.trialIndex + 1,
-    trial_id:           t.trial_id ?? "",
-    trial_type:         t.trial_type ?? "",      // critical | baseline | filler
-    speech_source:      speechSrc,               // human | tts  ← KEY IV
-    prime_text:         t.prime_text ?? "",
-    prime_audio_url:    primePlayer.src,
-    target_word:        t.target_word ?? "",
-    target_audio_url:   targetPlayer.src,
-    correct_response:   t.correct_response ?? "", // yes | no
-    participant_response: response,               // yes | no
-    is_correct:         is_correct ? "yes" : "no",
-    reaction_time_ms:   rt_ms,                   // RT from target audio onset
-    timestamp_iso:      new Date().toISOString(),
+    participant_id:       State.participantId,
+    session_id:           State.sessionId,
+    trial_index:          State.trialIndex + 1,
+    trial_id:             t.trial_id ?? "",
+    source_row_id:        t.source_row_id ?? "",
+    trial_type:           t.trial_type ?? "",
+    speech_source:        speechSrc,
+    prime_text:           t.prime_text ?? "",
+    target_word:          t.target_word ?? "",
+    correct_response:     t.correct_response ?? "",
+    participant_response: response,
+    is_correct:           is_correct ? "yes" : "no",
+    reaction_time_ms:     rt_ms,
+    prime_key:            t.prime_key ?? "",
+    // Questionnaire fields — left blank for now, filled in at submission
+    native_english_speaker:       "",
+    l1_language:                  "",
+    age_of_english_acquisition:   "",
+    timestamp_iso:        new Date().toISOString(),
   };
 
-  // Pass through any extra CSV columns
-  for(const [key, value] of Object.entries(t)){
-    if(!row.hasOwnProperty(key)) row[key] = value ?? "";
-  }
-
+  // Store locally — do NOT send yet, we wait for questionnaire answers
   State.rowsLocal.push(row);
-  sendToGoogleSheet(row);
 
   // Lock input
   State.awaitingChoice = false;
@@ -872,7 +878,7 @@ function finishStudy(){
   hide("screen-trials");
   show("screen-finish");
 
-  // Show/hide Q2 (native language input) based on Q1 answer
+  // Show/hide Q2 based on Q1 answer
   document.querySelectorAll('input[name="nativeSpeaker"]').forEach(radio => {
     radio.addEventListener("change", () => {
       document.getElementById("l1Block").style.display = radio.value === "no" ? "block" : "none";
@@ -897,20 +903,20 @@ function finishStudy(){
       return;
     }
 
-    const out = {
-      participant_id:         State.participantId,
-      session_id:             State.sessionId,
-      block:                  "Final",
-      speech_source_assigned: State.participantSpeechSource,
-      native_english_speaker: nativeChoice.value,
-      l1_language:            nativeChoice.value === "no" ? l1Value : "English",
+    // Save questionnaire answers
+    State.questionnaire = {
+      native_english_speaker:     nativeChoice.value,
+      l1_language:                nativeChoice.value === "no" ? l1Value : "English",
       age_of_english_acquisition: ageValue,
-      timestamp_iso:          new Date().toISOString(),
     };
-    for(let i = 0; i < State.attnAnswers.length; i++){
-      out[`attention_check_${i + 1}`] = State.attnAnswers[i] || "";
+
+    // Attach questionnaire answers to every stored trial row and send
+    for(const row of State.rowsLocal){
+      row.native_english_speaker     = State.questionnaire.native_english_speaker;
+      row.l1_language                = State.questionnaire.l1_language;
+      row.age_of_english_acquisition = State.questionnaire.age_of_english_acquisition;
+      sendToGoogleSheet(row);
     }
-    sendToGoogleSheet(out);
 
     document.getElementById("languagePrompt").classList.add("hidden");
     document.getElementById("finishMessage").classList.remove("hidden");
