@@ -4,8 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>`Speech Source Semantic Priming Study</title>
-
-<!-- CSS -->
 <style>
   body { font-family: sans-serif; background:#f5f5f5; margin:0; padding:20px; }
   .card { background:white; border-radius:8px; padding:20px; max-width:900px; margin:0 auto; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
@@ -133,14 +131,12 @@
 </head>
 <body>
 
-  <!-- intro -->
 <div class="card" id="screen-splash">
   <h1>Welcome to the experiment</h1>
-  <p>This study uses only audio prompts. Please wear headphones for the entire experiment and ensure there are no distractions.</p>
+  <p>This study uses only audio prompts. Please wear headphones for the entire experiment.</p>
   <button class="btn btn-primary" id="splashBtn">Continue</button>
 </div>
 
-<!-- Audio Check -->
 <div class="card hidden" id="screen-audiocheck">
   <h1>Audio Check</h1>
   <button class="btn btn-primary" id="playAudioCheckBtn">Play Audio</button>
@@ -154,18 +150,16 @@
   <button class="btn btn-primary" id="audioCheckNextBtn" disabled>Continue</button>
 </div>
 
-<!-- Instructions -->
 <div class="card hidden" id="screen-instructions">
   <h1>Instructions</h1>
   <div style="max-width:760px; margin:0 auto; text-align:left; font-size:18px; line-height:1.6; color:#1f2937;">
-    <p>In this task, you will be identifying whether or not the word you see on screen is a real word.</p>
-    <p>You will be presented with "Word" and "Nonword" options under the word to answer this question. Responses will be taken via keyboard, with F for a "Word" and J for a "Nonword." During each trial, you should focus on the center of the screen and read or listen to all words presented before making a decision about the final word.</p>
+    <p>In this task, you will hear two words played one after the other. After the second word, you will decide whether it is a real English word or not.</p>
+    <p>Press <strong>F</strong> for <strong>YES</strong> (real word) or <strong>J</strong> for <strong>NO</strong> (not a word). Respond as quickly and accurately as you can. Keep your eyes on the centre of the screen throughout each trial.</p>
   </div>
   <br>
   <button class="btn btn-primary" id="instructionsNextBtn">Continue</button>
 </div>
 
-<!-- Trials -->
 <div class="card hidden" id="screen-trials">
   <div class="progress"><div id="progressBar"></div></div>
   <h1 id="trialTitle">Trial</h1>
@@ -199,40 +193,37 @@
   </div>
 </div>
 
-<!-- End + Survey -->
 <div class="card hidden" id="screen-finish">
   <h1>All Done!</h1>
-  <p>Thank you for participating in this study.</p>
+  <p>Thank you for participating in this study. Please answer a few quick questions before you finish.</p>
   <div id="languagePrompt">
-    <p>Please answer a few quick language background questions before we finish:</p>
 
     <div class="question-block">
-      <p><strong>Is English your native (first) language?</strong></p>
+      <p><strong>1. Is English your native (first) language?</strong></p>
       <div class="radio-group" id="nativeSpeakerGroup">
-        <label><input type="radio" name="nativeSpeaker" value="yes"> Yes — English is my L1</label>
-        <label><input type="radio" name="nativeSpeaker" value="no"> No — English is an additional language (L2)</label>
+        <label><input type="radio" name="nativeSpeaker" value="yes"> Yes</label>
+        <label><input type="radio" name="nativeSpeaker" value="no"> No</label>
       </div>
     </div>
 
     <div class="question-block" id="l1Block" style="display:none;">
-      <p><strong>What is your native (first) language?</strong></p>
+      <p><strong>2. If not, please enter your native language:</strong></p>
       <input type="text" id="l1Input" placeholder="e.g. Mandarin, Spanish, French…" style="width:320px; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px;">
     </div>
 
     <div class="question-block">
-      <p><strong>If you are not a native English speaker, at what age did you learn English?</strong></p>
-      <input type="text" id="otherLanguagesInput" placeholder="e.g. Spanish, Japanese, N/A" style="width:320px; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px;">
+      <p><strong>3. At what age did you learn English?</strong></p>
+      <input type="number" id="ageInput" min="0" max="99" placeholder="e.g. 5" style="width:120px; padding:8px; font-size:14px; border:1px solid #ccc; border-radius:6px;">
     </div>
 
     <button class="btn btn-primary" id="languageSubmitBtn">Submit &amp; Finish</button>
   </div>
 
   <div id="finishMessage" class="hidden">
-    <p>Your responses have been recorded. You may now close this window.</p>
+    <p>✅ Your responses have been recorded. You may now close this window.</p>
   </div>
 </div>
 
-<!-- Javascript -->
 <script>
 /* ===========================
    CONFIG
@@ -261,15 +252,10 @@ const CONFIG = {
 
   // Use relative path for local testing with Live Server
   // For GitHub Pages, replace with your repository raw CSV URL
-  trialsUrl: "../data/priming_trials - development_trials.csv",
+  trialsUrl: "../data/trials.csv",
   attnBase: "./audio_check",           // inside /experiment/audio_check/
   attnFileNames: [
-    "alice_b.wav", "bean_b.wav", "beaten_t_b.wav", "bun_b.wav",
-    "curly_b.wav", "dane_b.wav", "den_b.wav", "dent_t_b.wav",
-    "faint_t_b.wav", "feign_b.wav", "gone_b.wav", "greatness_gs_b.wav",
-    "jaunt_t_b.wav", "keen_b.wav", "motley_t_b.wav", "ron_b.wav",
-    "sane_b.wav", "seller_b.wav", "tin_b.wav", "tint_t_b.wav", "whinny_b.wav"
-  ],
+    "curly.wav"],
   attentionEveryNTrials: 0,
 
   // ── Trial timing (ms) ──────────────────────────────────────────────
@@ -285,16 +271,14 @@ const CONFIG = {
 };
 
 /** Trials: Loaded from CSV
- *  Expected columns from /data/trials.csv:
- *  - Trial
- *  - Prime
- *  - Target
- *  - Prime Modality (word|audio)
- *  - Condition
- *  - Prime Language
- *  - Target Language
- *  - Trial Type (related|unrelated)
- *  Optional columns are carried through to output rows.
+ *  Expected columns in /data/trials.csv:
+ *  - trial_id         (optional)
+ *  - word_target      real English word target
+ *  - nonword_target   nonword target
+ *  - related_prime    semantically related prime
+ *  - unrelated_prime  unrelated prime
+ *  - speech_source    (optional) "human" | "tts" — leave blank for participant-level assignment
+ *  Any extra columns are passed through to the output data.
  */
 let TRIALS = [];
 
@@ -329,8 +313,8 @@ function generateParticipantId(){ return String(Math.floor(100000 + Math.random(
 
 function normalizeLanguage(value){
   const normalized = String(value ?? "").trim().toLowerCase();
-  if(normalized === "fr" || normalized === "french") return "french";
   if(normalized === "en" || normalized === "english") return "english";
+  if(normalized === "nonword") return "nonword";
   return normalized;
 }
 
@@ -437,118 +421,91 @@ function parseCSV(text){
     return -1;
   }
 
-  const trialIdIdx           = findColumn(["Trial", "trial", "trial_id"]);
-  const primeIdx             = findColumn(["Prime", "prime", "PrimeWord", "prime_word"]);
-  const targetIdx            = findColumn(["Target", "target", "TargetWord", "target_word"]);
-  const primeModalityIdx     = findColumn(["Prime Modality", "PrimeModality", "prime_modality", "PrimeType"]);
-  const trialTypeIdx         = findColumn(["Trial Type", "TrialType", "trial_type", "condition"]);
-  const targetLanguageIdx    = findColumn(["Target Language", "TargetLanguage", "target_language"]);
+  const trialIdIdx           = findColumn(["trial_id", "trial", "Trial"]);
   const speechSourceIdx      = findColumn(["speech_source", "SpeechSource", "Speech Source"]);
   const primeAudioFileIdx    = findColumn(["prime_audio_file", "PrimeAudioFile"]);
   const targetAudioFileIdx   = findColumn(["target_audio_file", "TargetAudioFile"]);
-  const englishTargetIdx     = findColumn(["english_target"]);
+
+  // Your CSV column names (and fallback aliases)
+  const wordTargetIdx        = findColumn(["word_target", "english_target"]);
   const nonwordTargetIdx     = findColumn(["nonword_target"]);
-  const relatedPrimeEnglishIdx   = findColumn(["related_prime_english"]);
-  const unrelatedPrimeEnglishIdx = findColumn(["unrelated_prime_english"]);
-  const relatedPrimeFrenchIdx    = findColumn(["related_prime_french"]);
-  const unrelatedPrimeFrenchIdx  = findColumn(["unrelated_prime_french"]);
+  const relatedPrimeIdx      = findColumn(["related_prime", "related_prime_english"]);
+  const unrelatedPrimeIdx    = findColumn(["unrelated_prime", "unrelated_prime_english"]);
 
-  const hasLegacyColumns = primeIdx !== -1 && targetIdx !== -1 && primeModalityIdx !== -1 && trialTypeIdx !== -1 && targetLanguageIdx !== -1;
-  const hasLexicalDecisionColumns = englishTargetIdx !== -1 && nonwordTargetIdx !== -1 && relatedPrimeEnglishIdx !== -1 && unrelatedPrimeEnglishIdx !== -1 && relatedPrimeFrenchIdx !== -1 && unrelatedPrimeFrenchIdx !== -1;
+  const hasRequiredColumns = wordTargetIdx !== -1 && nonwordTargetIdx !== -1
+    && relatedPrimeIdx !== -1 && unrelatedPrimeIdx !== -1;
 
-  if(!hasLegacyColumns && !hasLexicalDecisionColumns){
-    console.error("CSV missing required columns for either the legacy or lexical-decision formats.");
+  if(!hasRequiredColumns){
+    console.error("CSV missing required columns. Expected: word_target, nonword_target, related_prime, unrelated_prime");
     return [];
   }
   
   // Parse data rows
+  // Each CSV row expands into 4 trials:
+  //   word_target   + related_prime   → critical  (correct = yes)
+  //   word_target   + unrelated_prime → baseline  (correct = yes)
+  //   nonword_target + related_prime  → filler    (correct = no)
+  //   nonword_target + unrelated_prime→ filler    (correct = no)
   const trials = [];
   for(let i = 1; i < lines.length; i++){
     const line = lines[i].trim();
-    if(!line) continue; // skip empty lines
-    
+    if(!line) continue;
+
     const cells = line.split(',').map(c => c.trim());
-    if(hasLegacyColumns){
-      const primeText       = cells[primeIdx] || "";
-      const targetWord      = cells[targetIdx] || "";
-      const primeType       = ((cells[primeModalityIdx] || "audio").toLowerCase() === "audio") ? "audio" : "word";
-      const trialType       = (cells[trialTypeIdx] || "").toLowerCase();
-      const targetLanguage  = normalizeLanguage(cells[targetLanguageIdx] || "");
-      const correctResponse = normalizeResponseLabel(targetLanguage);
-      // speech_source: read from CSV if present, otherwise will use participantSpeechSource at runtime
-      const speechSource    = speechSourceIdx !== -1 ? (cells[speechSourceIdx] || "").toLowerCase() : "";
-      const primeAudioFile  = primeAudioFileIdx !== -1 ? (cells[primeAudioFileIdx] || "") : `${primeText}${CONFIG.audioSuffix}`;
-      const targetAudioFile = targetAudioFileIdx !== -1 ? (cells[targetAudioFileIdx] || "") : `${targetWord}${CONFIG.audioSuffix}`;
 
-      if(!primeText || !targetWord) continue;
-      
-      // Capture all other columns as custom data
-      const customData = {};
-      for(let j = 0; j < headers.length; j++){
-        const skip = [trialIdIdx, primeIdx, targetIdx, primeModalityIdx, trialTypeIdx, targetLanguageIdx, speechSourceIdx, primeAudioFileIdx, targetAudioFileIdx];
-        if(!skip.includes(j)) customData[headers[j]] = cells[j] || '';
-      }
-      
-      trials.push({
-        trial_id:         trialIdIdx !== -1 ? (cells[trialIdIdx] || i) : i,
-        prime_type:       primeType,
-        prime_text:       primeText,
-        prime_audio_file: primeAudioFile,
-        target_word:      targetWord,
-        target_audio_file:targetAudioFile,
-        trial_type:       trialType,   // "critical" | "baseline" | "filler"
-        correct_response: correctResponse,  // "yes" (real word) | "no" (nonword)
-        target_language:  targetLanguage,
-        speech_source:    speechSource,     // "human" | "tts" | "" (use participant-level)
-        ...customData,
-      });
-      continue;
-    }
+    const trialBaseId    = trialIdIdx !== -1 ? (cells[trialIdIdx] || i) : i;
+    const wordTarget     = cells[wordTargetIdx]    || "";
+    const nonwordTarget  = cells[nonwordTargetIdx] || "";
+    const relatedPrime   = cells[relatedPrimeIdx]  || "";
+    const unrelatedPrime = cells[unrelatedPrimeIdx]|| "";
+    const speechSource   = speechSourceIdx !== -1 ? (cells[speechSourceIdx] || "").toLowerCase() : "";
 
+    if(!wordTarget && !nonwordTarget) continue;
+    if(!relatedPrime && !unrelatedPrime) continue;
+
+    // Carry through any extra columns (e.g. item set, frequency, etc.)
+    const skipIdx = [trialIdIdx, wordTargetIdx, nonwordTargetIdx, relatedPrimeIdx, unrelatedPrimeIdx, speechSourceIdx, primeAudioFileIdx, targetAudioFileIdx];
     const customData = {};
     for(let j = 0; j < headers.length; j++){
-      if(j !== trialIdIdx && j !== englishTargetIdx && j !== nonwordTargetIdx && j !== relatedPrimeEnglishIdx && j !== unrelatedPrimeEnglishIdx && j !== relatedPrimeFrenchIdx && j !== unrelatedPrimeFrenchIdx){
-        customData[headers[j]] = cells[j] || '';
-      }
+      if(!skipIdx.includes(j)) customData[headers[j]] = cells[j] || '';
     }
 
-    const trialBaseId = trialIdIdx !== -1 ? (cells[trialIdIdx] || i) : i;
     const targetSpecs = [
-      { target_word: cells[englishTargetIdx] || "", correct_response: "word", target_label: "english_target" },
-      { target_word: cells[nonwordTargetIdx] || "", correct_response: "nonword", target_label: "nonword_target" },
+      { target_word: wordTarget,    correct_response: "yes", trial_type: "word"    },
+      { target_word: nonwordTarget, correct_response: "no",  trial_type: "nonword" },
     ];
     const primeSpecs = [
-      { prime_key: "related_prime_english", prime_text: cells[relatedPrimeEnglishIdx] || "" },
-      { prime_key: "unrelated_prime_english", prime_text: cells[unrelatedPrimeEnglishIdx] || "" },
-      { prime_key: "related_prime_french", prime_text: cells[relatedPrimeFrenchIdx] || "" },
-      { prime_key: "unrelated_prime_french", prime_text: cells[unrelatedPrimeFrenchIdx] || "" },
+      { prime_text: relatedPrime,   prime_key: "related"   },
+      { prime_text: unrelatedPrime, prime_key: "unrelated" },
     ];
 
-    for(const targetSpec of targetSpecs){
-      if(!targetSpec.target_word) continue;
+    for(const tSpec of targetSpecs){
+      if(!tSpec.target_word) continue;
+      for(const pSpec of primeSpecs){
+        if(!pSpec.prime_text) continue;
 
-      for(const primeSpec of primeSpecs){
-        if(!primeSpec.prime_text) continue;
+        // trial_type: critical = related+word, baseline = unrelated+word, filler = nonword trials
+        let trialType = "filler";
+        if(tSpec.trial_type === "word" && pSpec.prime_key === "related")   trialType = "critical";
+        if(tSpec.trial_type === "word" && pSpec.prime_key === "unrelated") trialType = "baseline";
 
-        const primeType = randomChoice(["word", "audio"]);
         trials.push({
-          trial_id: `${trialBaseId}_${targetSpec.target_label}_${primeSpec.prime_key}_${primeType}`,
-          source_row_id: trialBaseId,
-          prime_type: primeType,
-          prime_text: primeSpec.prime_text,
-          prime_audio_file: `${primeSpec.prime_text}.wav`,
-          target_word: targetSpec.target_word,
-          target_label: targetSpec.target_label,
-          prime_key: primeSpec.prime_key,
-          trial_type: targetSpec.correct_response,
-          correct_response: targetSpec.correct_response,
-          target_language: targetSpec.correct_response,
+          trial_id:          `${trialBaseId}_${tSpec.trial_type}_${pSpec.prime_key}`,
+          source_row_id:     trialBaseId,
+          prime_text:        pSpec.prime_text,
+          prime_audio_file:  `${pSpec.prime_text}${CONFIG.audioSuffix}`,
+          target_word:       tSpec.target_word,
+          target_audio_file: `${tSpec.target_word}${CONFIG.audioSuffix}`,
+          trial_type:        trialType,        // critical | baseline | filler
+          correct_response:  tSpec.correct_response,  // yes | no
+          prime_key:         pSpec.prime_key,
+          speech_source:     speechSource,     // "" = use participant-level assignment
           ...customData,
         });
       }
     }
   }
-  
+
   return trials;
 }
 
@@ -655,13 +612,12 @@ function showAudioAttentionCheck(onContinue){
 
     // optionally send attention check row immediately
     sendToGoogleSheet({
-      participant_id: State.participantId,
-      block: "AttentionCheck",
-      attention_index: State.attnAnswers.length,
-      attention_audio: audio.src,
+      participant_id:     State.participantId,
+      block:              "AttentionCheck",
+      attention_index:    State.attnAnswers.length,
+      attention_audio:    audio.src,
       attention_response: ans,
-      headphone_type: State.headphoneType,
-      timestamp_iso: new Date().toISOString(),
+      timestamp_iso:      new Date().toISOString(),
     });
 
     card.classList.add('hidden');
@@ -916,39 +872,30 @@ function finishStudy(){
   hide("screen-trials");
   show("screen-finish");
 
-  // Show/hide L1 text box based on native speaker answer
+  // Show/hide Q2 (native language input) based on Q1 answer
   document.querySelectorAll('input[name="nativeSpeaker"]').forEach(radio => {
     radio.addEventListener("change", () => {
-      const isNative = radio.value === "yes";
-      document.getElementById("l1Block").style.display = isNative ? "none" : "block";
+      document.getElementById("l1Block").style.display = radio.value === "no" ? "block" : "none";
     });
   });
 
-  const languageSubmitBtn = document.getElementById("languageSubmitBtn");
-
-  languageSubmitBtn.onclick = () => {
+  document.getElementById("languageSubmitBtn").onclick = () => {
     const nativeChoice = document.querySelector('input[name="nativeSpeaker"]:checked');
     const l1Value      = document.getElementById("l1Input").value.trim();
-    const otherLangs   = document.getElementById("otherLanguagesInput").value.trim();
+    const ageValue     = document.getElementById("ageInput").value.trim();
 
     if(!nativeChoice){
-      alert("Please indicate whether English is your native language.");
+      alert("Please answer question 1.");
       return;
     }
     if(nativeChoice.value === "no" && !l1Value){
-      alert("Please enter your native (first) language.");
+      alert("Please enter your native language for question 2.");
       return;
     }
-    if(!otherLangs){
-      alert("Please fill in the other languages field (or type N/A).");
+    if(!ageValue){
+      alert("Please enter your age of English acquisition for question 3.");
       return;
     }
-
-    State.languageBackground = {
-      nativeSpeaker:     nativeChoice.value,
-      l1Language:        nativeChoice.value === "no" ? l1Value : "English",
-      otherLanguages:    otherLangs,
-    };
 
     const out = {
       participant_id:         State.participantId,
@@ -956,8 +903,8 @@ function finishStudy(){
       block:                  "Final",
       speech_source_assigned: State.participantSpeechSource,
       native_english_speaker: nativeChoice.value,
-      l1_language:            State.languageBackground.l1Language,
-      other_languages:        otherLangs,
+      l1_language:            nativeChoice.value === "no" ? l1Value : "English",
+      age_of_english_acquisition: ageValue,
       timestamp_iso:          new Date().toISOString(),
     };
     for(let i = 0; i < State.attnAnswers.length; i++){
