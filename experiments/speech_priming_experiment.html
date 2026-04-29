@@ -252,10 +252,11 @@ const CONFIG = {
 
   // Use relative path for local testing with Live Server
   // For GitHub Pages, replace with your repository raw CSV URL
-  trialsUrl: "../data/development_trials.csv",
+  trialsUrl: "../data/trials.csv",
   attnBase: "./audio_check",           // inside /experiment/audio_check/
   attnFileNames: [
-    'curly.wav', 'alarm.wav', 'python.wav', 'scooter.wav'],
+    'curly.wav', 'alarm.wav', 'python.wav', 'scooter.wav'
+  ],
   attentionEveryNTrials: 40,
 
   // ── Trial timing (ms) ──────────────────────────────────────────────
@@ -818,15 +819,15 @@ function recordChoice(choiceSide){
     is_correct:           is_correct ? "yes" : "no",
     reaction_time_ms:     rt_ms,
     prime_key:            t.prime_key ?? "",
-    // Questionnaire fields — left blank for now, filled in at submission
-    native_english_speaker:       "",
-    l1_language:                  "",
-    age_of_english_acquisition:   "",
+    native_english_speaker:     "",
+    l1_language:                "",
+    age_of_english_acquisition: "",
     timestamp_iso:        new Date().toISOString(),
   };
 
-  // Store locally — do NOT send yet, we wait for questionnaire answers
+  // Send immediately after each trial so no data is lost if browser closes early
   State.rowsLocal.push(row);
+  sendToGoogleSheet(row);
 
   // Lock input
   State.awaitingChoice = false;
@@ -903,20 +904,28 @@ function finishStudy(){
       return;
     }
 
-    // Save questionnaire answers
-    State.questionnaire = {
+    // Send one summary row with questionnaire answers
+    // Use participant_id to join with trial rows in your analysis
+    sendToGoogleSheet({
+      participant_id:             State.participantId,
+      session_id:                 State.sessionId,
+      trial_index:                "QUESTIONNAIRE",
+      trial_id:                   "",
+      source_row_id:              "",
+      trial_type:                 "",
+      speech_source:              "",
+      prime_text:                 "",
+      target_word:                "",
+      correct_response:           "",
+      participant_response:       "",
+      is_correct:                 "",
+      reaction_time_ms:           "",
+      prime_key:                  "",
       native_english_speaker:     nativeChoice.value,
       l1_language:                nativeChoice.value === "no" ? l1Value : "English",
       age_of_english_acquisition: ageValue,
-    };
-
-    // Attach questionnaire answers to every stored trial row and send
-    for(const row of State.rowsLocal){
-      row.native_english_speaker     = State.questionnaire.native_english_speaker;
-      row.l1_language                = State.questionnaire.l1_language;
-      row.age_of_english_acquisition = State.questionnaire.age_of_english_acquisition;
-      sendToGoogleSheet(row);
-    }
+      timestamp_iso:              new Date().toISOString(),
+    });
 
     document.getElementById("languagePrompt").classList.add("hidden");
     document.getElementById("finishMessage").classList.remove("hidden");
