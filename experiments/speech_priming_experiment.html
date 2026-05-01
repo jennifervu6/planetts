@@ -167,10 +167,10 @@
   <!-- Main stimulus display: shows fixation / prime / target in sequence -->
   <div id="stimulusDisplay">
     <div id="fixationCross" class="hidden">+</div>
-    <div id="primeLabel" class="hidden">PRIME</div>
+    <div id="primeLabel" class="hidden"></div>
     <div id="primeArea" class="hidden">🔊</div>
     <div id="phaseIndicator"></div>
-    <div id="targetLabel" class="hidden">TARGET — Is this a real word?</div>
+    <div id="targetLabel" class="hidden"></div>
     <div id="targetArea" class="hidden"></div>
   </div>
 
@@ -744,7 +744,6 @@ async function runTrialSequence(trial, token){
   primeLabel.classList.remove("hidden");
   const speechSrc = (trial.speech_source || State.participantSpeechSource || "human");
   primeArea.textContent = "🔊";
-  phaseIndicator.textContent = `Prime · ${speechSrc === "tts" ? "Text-to-Speech" : "Human speech"}`;
 
   try {
     primePlayer.currentTime = 0;
@@ -762,33 +761,19 @@ async function runTrialSequence(trial, token){
   await sleep(CONFIG.soa_pauseMs);
   if(token !== trialRenderToken) return;
 
-  /* ── STEP 4: Target audio ── */
+  /* ── STEP 4: Target — show as text only, no audio ── */
   clearStimulus();
   targetArea.classList.remove("hidden");
   targetLabel.classList.remove("hidden");
-  targetArea.textContent = "🔊";
-  phaseIndicator.textContent = "Target — listen…";
+  targetArea.textContent = trial.target_word;
+  phaseIndicator.textContent = "Is this a real word?";
 
-  // Record RT onset the moment target audio starts
+  // RT clock starts when target word appears on screen
   State.targetOnsetTs = nowMs();
-  try {
-    targetPlayer.currentTime = 0;
-    await targetPlayer.play();
-    await waitForAudioEnd(targetPlayer);
-  } catch(e){
-    console.error("Target audio error:", e);
-  }
-  if(token !== trialRenderToken) return;
 
   /* ── STEP 5: Response phase ── */
-  // Show target word as text for reference alongside YES/NO buttons
-  targetArea.textContent   = trial.target_word;
-  phaseIndicator.textContent = "Is this a real word?";
-  targetLabel.classList.remove("hidden");
-
   State.awaitingChoice = true;
   setChoiceVisible(true);
-  // RT is measured from target audio onset (already captured above)
 }
 
 function recordChoice(choiceSide){
